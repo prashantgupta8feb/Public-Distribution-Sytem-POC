@@ -1,6 +1,4 @@
 .vs/
-'.Debug'
-
 # Ignore build directories
 Debug/
 Release/
