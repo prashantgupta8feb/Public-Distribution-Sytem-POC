@@ -1,1 +1,10 @@
-'.vs/' 
+.vs/
+'.Debug'
+
+# Ignore build directories
+Debug/
+Release/
+
+# Ignore bin and obj folders
+bin/
+obj/
