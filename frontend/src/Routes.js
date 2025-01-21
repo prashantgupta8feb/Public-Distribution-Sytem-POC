@@ -5,7 +5,7 @@ import Header from './components/Header';
 import LoginForm from './components/LoginForm';
 import Signup from './components/Signup';
 import ForgotPassword from './components/ForgotPassword';
-import DistributionForm from './components/Dashboard';
+import Dashboard from './components/Dashboard';
 import RegistrationForm from './components/RegistrationForm';
 import ApplicationStatus from './components/ApplicationStatus';
 import ApproveApplication from './components/ApproveApplication';
@@ -16,7 +16,7 @@ const RoutesComponent = () => {
       <Header />
       <Routes>
         <Route path="new-registration" element={<RegistrationForm />} />
-        <Route path="/" element={<DistributionForm />} />
+        <Route path="/" element={<Dashboard />} />
         <Route path="user-login" element={<LoginForm />} />
         <Route path="sign-up" element={<Signup />} />
         <Route path="application-status" element={<ApplicationStatus />} />

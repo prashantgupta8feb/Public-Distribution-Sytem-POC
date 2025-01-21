@@ -39,7 +39,7 @@ const IconContainer = styled.span`
   margin-right: 10px;
 `;
 
-const DistributionForm = () => {
+const Dashboard = () => {
   const [beneficiaries, setBeneficiaries] = useState(100);
   const [rationCardHolders, setRationCardHolders] = useState(50);
   const [femaleHouseOwners, setFemaleHouseOwners] = useState(30);
@@ -77,4 +77,4 @@ const DistributionForm = () => {
   );
 };
 
-export default DistributionForm;
+export default Dashboard;

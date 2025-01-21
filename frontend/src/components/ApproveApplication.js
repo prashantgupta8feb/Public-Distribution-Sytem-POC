@@ -1,90 +1,78 @@
-// ApproveApplication.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
+import './ApproveApplication.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const ApproveApplication = () => {
-  const [approveData, setApproveData] = useState(null);
+  const [approveData, setApproveData] = useState([]);
   const [error, setError] = useState(null);
 
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [birthDate, setBirthDate] = useState('');
-  const [gender, setGender] = useState('male');
-  const [streetAddress1, setStreetAddress1] = useState('');
-  const [streetAddress2, setStreetAddress2] = useState('');
-  const [region, setRegion] = useState('');
-  const [postalCode, setPostalCode] = useState('');  
-  const [State, setState] = useState('');
-  const [district, setDistrict] = useState('');
-  const [tehsil, setTehsil] = useState('');
-  const [fpsShop, setFpsShop] = useState('');
-  const [district1, setDistrict1] = useState('');
-  const [tehsil1, setTehsil1] = useState('');
-  const [fpsShop1, setFpsShop1] = useState('');
+  useEffect(() => {
+    fetchData();
+  }, []);
 
-  const handleApproveApplication = async (e) => {
-    e.preventDefault();
-
-    const registredData = {
-      fullName,
-      email,
-      phoneNumber,
-      birthDate,
-      gender,
-      streetAddress1,
-      streetAddress2,
-      State,
-      region,
-      postalCode,
-      district1,
-      tehsil1,
-      fpsShop1,
-    };
+  const fetchData = async () => {
     try {
-      const response = await axios.get(`https://localhost:44386/api/register`);
-      setApproveData(response.data);
+      const response = await axios.get('https://localhost:44386/api/register');
+      setApproveData(response.data);      
       setError(null);
     } catch (error) {
-      setApproveData(null);
+      setApproveData([]);
       if (error.response && error.response.status === 404) {
-        setError('No new open application found.');
+        setError('No new open applications found.');
       } else {
         setError(error.response ? error.response.data : 'An error occurred');
       }
     }
   };
 
-  return (
-    <div className="ApproveApplication-wrapper">
-      <form onSubmit={handleApproveApplication} className="approve-application-form">
-        <h2>Applications to be approve or reject </h2>
-        
-        
-        <div className="register-link">
-          <p>
-            Back to the previous page?&nbsp;&nbsp;&nbsp;<a href="/">Home</a>
-          </p>
-        </div>
-      </form>
+  const handleApprove = async (index, id) => {
+    try {
+      await axios.delete(`https://localhost:44386/api/register/${id}`);
+      const updatedData = [...approveData];
+      updatedData.splice(index, 1);
+      setApproveData(updatedData);
+    } catch (error) {
+      console.error('Error deleting record:', error);
+    }
+  };
 
-      {approveData ? (
-        <div className="approve-data">
-          <h3>Approve Data:</h3>
-          <div className="data-details">
-            {Object.entries(approveData).map(([key, value]) => (
-              <div key={key} className="data-item">
-                <strong>{key}:</strong> {JSON.stringify(value)}
+  const handleReject = async (index, id) => {
+    try {
+      await axios.delete(`https://localhost:44386/api/register/${id}`);
+      const updatedData = [...approveData];
+      updatedData.splice(index, 1);
+      setApproveData(updatedData);
+    } catch (error) {
+      console.error('Error deleting record:', error);
+    }
+  };
+
+  return (
+    <div className="apcontainer">
+      <h2>Applications to be Approved or Rejected</h2>
+      {error && <div className="alert alert-danger">{error}</div>}
+      <div className="row">
+        {approveData.map((data, index) => (
+          <div className="col-sm-6 col-md-4" key={index}>
+            <div className="card mb-3">
+              <div className="card-body">
+                <h5 className="card-title">{data.fullName}</h5>
+                <p className="card-text"><strong>Email:</strong> {data.email}</p>
+                <p className="card-text"><strong>Phone Number:</strong> {data.phoneNumber}</p>
+                <p className="card-text"><strong>Birth Date:</strong> {data.birthDate}</p>
+                <p className="card-text"><strong>Gender:</strong> {data.gender}</p>
+                <p className="card-text"><strong>Address:</strong> {data.streetAddress1}, {data.streetAddress2}, {data.region}, {data.State}, {data.postalCode}</p>
+                              
+                <div className="d-flex justify-content-between">
+                  <button className="btn btn-success" onClick={() => handleApprove(index, data.id)}>Approve</button>
+                  <button className="btn btn-danger" onClick={() => handleReject(index, data.id)}>Reject</button>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
-        </div>
-      ) : error ? (
-        <div className="error-message">
-          <p>{error}</p>
-        </div>
-      ) : null}
+        ))}
+      </div>
     </div>
   );
 };

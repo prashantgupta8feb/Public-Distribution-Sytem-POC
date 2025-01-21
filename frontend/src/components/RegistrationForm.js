@@ -80,13 +80,16 @@ const RegistrationForm = () => {
   const [streetAddress2, setStreetAddress2] = useState('');
   const [region, setRegion] = useState('');
   const [postalCode, setPostalCode] = useState('');  
-  const [State, setState] = useState('');
+  const [state, setState] = useState('');
   const [district, setDistrict] = useState('');
   const [tehsil, setTehsil] = useState('');
   const [fpsShop, setFpsShop] = useState('');
   const [district1, setDistrict1] = useState('');
   const [tehsil1, setTehsil1] = useState('');
   const [fpsShop1, setFpsShop1] = useState('');
+  const [membercnt, setMembercnt] = useState('');
+  const [familyincome, setFamilyincome] = useState('');
+  const [scheme, setScheme] = useState('');
   
 
   const handleSubmit = async (e) => {
@@ -100,14 +103,17 @@ const RegistrationForm = () => {
       gender,
       streetAddress1,
       streetAddress2,
-      State,
+      state,
       region,
       postalCode,
-      district1,
-      tehsil1,
-      fpsShop1,
+      district,
+      tehsil,
+      fpsShop,
+      membercnt,
+      familyincome,
+      scheme
     };
-    
+    console.log(registrationData);
   
     try {
      // alert('calling api')
@@ -128,6 +134,8 @@ const RegistrationForm = () => {
       setFpsShop('');
       setState('');
       setDistrict('');
+      setMembercnt('');
+      setFamilyincome('');
     } catch (error) {
       console.error('Error registering:', error);
     }
@@ -163,11 +171,11 @@ const RegistrationForm = () => {
         <div className="column">
           <div className="Registrationinputbox">
             <label className="label">Annual Family income</label>
-            <input type="number" placeholder="Enter Family income"  required />
+            <input type="number" placeholder="Enter Family income" value={familyincome} onChange={(e) => setFamilyincome(e.target.value)} required />
           </div>
           <div className="Registrationinputbox">
             <label className="label">No of family member(count)</label>
-            <input type="number"  required />
+            <input type="number" value={membercnt} onChange={(e) => setMembercnt(e.target.value)} required />
           </div>
         </div>
 
@@ -190,7 +198,7 @@ const RegistrationForm = () => {
           </div>
         </div>
         <br></br>
-        <label className="label">Street Address</label>
+        <label className="label">Address Details</label>
         <div className="column">
           <div className="select-box">            
             <select onChange={(e) => handlestate(e)}>

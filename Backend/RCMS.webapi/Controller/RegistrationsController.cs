@@ -22,7 +22,7 @@
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Registration>>> GetRegistrations()
-         {
+        {
             return await _context.Registrations.ToListAsync();
         }
 
@@ -44,6 +44,10 @@
         {
             try
             {
+                if (registration.familyincome > 0 && registration.familyincome <= 500000) registration.Scheme = "BPL";
+                else if (registration.familyincome > 500000 && registration.familyincome <= 1000000) registration.Scheme = "PHH";
+                else if (registration.familyincome > 1000000 && registration.familyincome <= 1500000) registration.Scheme = "SFY";
+                else registration.Scheme = "NA";
                 _context.Registrations.Add(registration);
                 await _context.SaveChangesAsync();
             }

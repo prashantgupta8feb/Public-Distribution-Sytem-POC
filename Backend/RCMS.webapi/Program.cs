@@ -1,7 +1,11 @@
 // Program.cs
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using RCMS.webapi.Data;
+using System.Text;
+
 
 //Initializes a new instance of the WebApplicationBuilder class
 //This is the entry point to configure your app. It prepares the services, configurations, and middleware that the app will use.
@@ -24,6 +28,27 @@ builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 
 });
+
+// Add JWT authentication service
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"], // Add your configuration in appsettings.json
+        ValidAudience = builder.Configuration["Jwt:Audience"], // Add your configuration in appsettings.json
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])) // Secret Key
+    };
+});
+
 //Adds CORS services to the app.
 //Why: CORS allows your API to accept requests from different origins (domains).
 //This is useful in cases where your frontend (e.g., React or Angular app) is hosted on a different domain than your API.
