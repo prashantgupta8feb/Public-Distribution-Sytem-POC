@@ -1,5 +1,6 @@
 ﻿namespace RCMS.webapi.Controller
 {
+    using Microsoft.AspNetCore.Authorization;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.IdentityModel.Tokens;
@@ -32,65 +33,72 @@
             return await _context.Users.ToListAsync();
         }
 
+        [AllowAnonymous]
         [HttpPost("login")]
-        public async Task<ActionResult<User>> Login(LoginRequest loginRequest)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginRequest.Email && u.Password == loginRequest.Password);
-            if (user == null)
-            {
-                return Unauthorized();
-            }
-            // Create a list of claims
-            var claims = new[]
-            {
-            new Claim(ClaimTypes.Name, user.Email),
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            //new Claim(ClaimTypes.Role, user.) // Assuming you have a Role field in your User model
-        };
-
-            // Get the key from appsettings.json
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
-
-            // Define the signing credentials
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-            // Set the expiration time of the token
-            var expires = DateTime.Now.AddHours(1);
-
-            // Create the JWT token
-            var token = new JwtSecurityToken(
-                issuer: _configuration["Jwt:Issuer"],
-                audience: _configuration["Jwt:Audience"],
-                claims: claims,
-                expires: expires,
-                signingCredentials: creds
-            );
-
-            // Return the token as a response
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var tokenString = tokenHandler.WriteToken(token);
-
-            return Ok(new { Token = tokenString });
-
-        }
-
-
-        /*[HttpPost("signup")]
-        public async Task<ActionResult<User>> PostUser(User user)
+        public async Task<ActionResult> Login(LoginRequest loginRequest)
         {
             try
             {
-                _context.Users.Add(user);
-                await _context.SaveChangesAsync();
-            }
+                // Step 1: Authenticate user
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.Email == loginRequest.Email && u.Password == loginRequest.Password);
 
+                if (user == null)
+                {
+                    return Unauthorized("Invalid credentials.");
+                }
+
+                // Step 2: Fetch user's role
+                var userRoleName = await _context.UserRoles
+                    .Where(ur => ur.UserId == user.Id)
+                    .Join(_context.Roles,
+                          ur => ur.RoleId,
+                          r => r.RoleId,
+                          (ur, r) => r.RoleName)
+                    .FirstOrDefaultAsync();
+
+                if (string.IsNullOrEmpty(userRoleName))
+                {
+                    return Forbid("No role assigned to the user.");
+                }
+
+                // Step 3: Only allow Admins to log in
+                if (userRoleName != "Admin")
+                {
+                    return StatusCode(403, new { message = "Only Admins are allowed to log in." });
+                }
+
+                // Step 4: Create claims
+                var claims = new[]
+                {
+                    new Claim(ClaimTypes.Name, user.Email),
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                    new Claim(ClaimTypes.Role, userRoleName)
+        };
+
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+                var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                var token = new JwtSecurityToken(
+                    issuer: _configuration["Jwt:Issuer"],
+                    audience: _configuration["Jwt:Audience"],
+                    claims: claims,
+                    expires: DateTime.Now.AddHours(1),
+                    signingCredentials: creds
+                );
+
+                var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+                return Ok(new { Token = tokenString });
+            }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
-                return BadRequest("Failed to register user.");
+                // Log error to console or logging system
+                Console.WriteLine("Login error: " + ex.Message);
+                return StatusCode(500, "An error occurred during login.");
             }
-            return CreatedAtAction(nameof(GetUsers), new {  email = user.Email}, user);
-        }*/
+        }
+
+
 
         [HttpPost("signup")]
         public async Task<ActionResult<User>> PostUser(User user)

@@ -22,12 +22,17 @@ builder.Services.AddSwaggerGen(c =>
 
 //Configures Entity Framework Core (EF Core) to use SQL Server as the database provider
 //and injects the DataContext class into the application’s services
-builder.Services.AddDbContext<DataContext>(options =>
+builder.Services.AddDbContext<DataContext>(
+    options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")),
+    ServiceLifetime.Scoped
+);
+
+/*builder.Services.AddDbContext<DataContext>(options =>
 {
 
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 
-});
+});*/
 
 // Add JWT authentication service
 builder.Services.AddAuthentication(options =>
@@ -49,10 +54,26 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("User", policy => policy.RequireRole("User"));
+});
+
 //Adds CORS services to the app.
 //Why: CORS allows your API to accept requests from different origins (domains).
 //This is useful in cases where your frontend (e.g., React or Angular app) is hosted on a different domain than your API.
-builder.Services.AddCors();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowReactApp",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+}
+    );
 
 //what: Adds support for controllers to the app.
 //Why: ASP.NET Core uses the Model-View-Controller (MVC) pattern.
@@ -79,10 +100,12 @@ app.UseHttpsRedirection();
 app.UseRouting();
 
 //What: Sets the CORS policy to allow requests from http://localhost:3000 (a typical frontend app).
-app.UseCors(builder => builder
-    .WithOrigins("http://localhost:3000")
-    .AllowAnyHeader()
-    .AllowAnyMethod());
+app.UseCors("AllowReactApp");
+
+app.UseAuthentication();  // Must be before UseAuthorization
+app.UseAuthorization();
+
+
 
 //What: Maps the controller routes to the endpoints.
 //Why: This step ensures that the application can route requests to the controllers (which contain the API logic). 
